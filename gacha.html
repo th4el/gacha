@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Gacha Joy! Dark</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: "Segoe UI", sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(to bottom, #1a1a1a, #2c0000);
+      color: #f8f8f8;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 30px;
+    }
+
+    h1 {
+      color: #ff4d4d;
+      text-shadow: 0 0 5px #900;
+    }
+
+    input, select, button {
+      font-size: 16px;
+      border-radius: 8px;
+      border: none;
+      margin: 10px;
+      padding: 12px 16px;
+      background-color: #2c2c2c;
+      color: #f8f8f8;
+      transition: all 0.3s ease;
+    }
+
+    /* Input Hover Animation (border from center) */
+    input[type="text"] {
+      border-bottom: 2px solid transparent;
+      position: relative;
+      background: transparent;
+      outline: none;
+    }
+
+    input[type="text"]::placeholder {
+      color: #aaa;
+    }
+
+    input[type="text"]:hover {
+      border-bottom: 2px solid #ff4d4d;
+    }
+
+    input[type="text"]::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      bottom: 0;
+      width: 0;
+      height: 2px;
+      background: #ff4d4d;
+      transition: all 0.4s ease;
+      transform: translateX(-50%);
+    }
+
+    input[type="text"]:hover::after {
+      width: 100%;
+    }
+
+    select:hover, button:hover {
+      background-color: #550000;
+    }
+
+    button {
+      background-color: #8b0000;
+      color: white;
+      cursor: pointer;
+    }
+
+    .input-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .gacha-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    #resultWrapper {
+      min-height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #resultText {
+      font-size: 22px;
+      font-weight: bold;
+      background: #1f1f1f;
+      color: #ff6666;
+      padding: 20px;
+      border: 2px solid #ff4d4d;
+      border-radius: 12px;
+      display: none;
+      max-width: 90%;
+      word-break: break-word;
+    }
+
+    .show-result {
+      display: inline-block;
+      animation: joyFade 0.5s ease-in-out, joyShake 0.4s ease-in-out;
+    }
+
+    @keyframes joyFade {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes joyShake {
+      0% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      50% { transform: translateX(5px); }
+      75% { transform: translateX(-3px); }
+      100% { transform: translateX(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Gacha!</h1>
+
+  <div class="input-container">
+    <input type="text" id="userName" placeholder="Masukkan Nama User">
+  </div>
+
+  <label for="locationSelect">Pilih Tempat:</label>
+  <select id="locationSelect">
+    <option value="Gua">Gua</option>
+    <option value="Hutan">Hutan</option>
+  </select>
+
+  <div class="gacha-container">
+    <button onclick="gacha()">Gacha Item</button>
+    <button onclick="copyResult()">Copy Hasil</button>
+    <div id="resultWrapper">
+      <p id="resultText">Hasil akan muncul di sini</p>
+    </div>
+  </div>
+
+  <script>
+    const itemsByLocation = {
+      Gua: {
+        D: ["Sayap Kelelawar Biasa", "Tulang Tikus"],
+        C: ["Kuku Serigala", "Kerang Aneh"],
+        B: ["Mata Kristal", "Kulit Naga Beku"],
+        A: ["Taring Naga Hitam", "Sayap Malaikat Rusak"],
+        S: ["Jantung Naga Merah"]
+      },
+      Hutan: {
+        D: ["Daun Layu", "Batang Kayu Rapuh"],
+        C: ["Buah Langka", "Kulit Ular"],
+        B: ["Bulu Burung Emas", "Mata Serangga Ajaib"],
+        A: ["Racikan Druid", "Tanduk Rusa Legendaris"],
+        S: ["Benih Pohon Kehidupan"]
+      }
+    };
+
+    const rarityChances = {
+      D: 40,
+      C: 30,
+      B: 15,
+      A: 10,
+      S: 5
+    };
+
+    function getRandomItem(location) {
+      const roll = Math.random() * 100;
+      let accumulated = 0;
+      let selectedTier;
+
+      for (const [tier, chance] of Object.entries(rarityChances)) {
+        accumulated += chance;
+        if (roll <= accumulated) {
+          selectedTier = tier;
+          break;
+        }
+      }
+
+      const items = itemsByLocation[location][selectedTier];
+      const item = items[Math.floor(Math.random() * items.length)];
+      return { item, tier: selectedTier };
+    }
+
+    function gacha() {
+      const userName = document.getElementById("userName").value.trim();
+      const location = document.getElementById("locationSelect").value;
+      const resultEl = document.getElementById("resultText");
+
+      if (!userName) {
+        alert("Silakan masukkan Nama User terlebih dahulu.");
+        return;
+      }
+
+      const result = getRandomItem(location);
+      const resultText = `Selamat! ${userName} mendapatkan ${result.item} (Tier ${result.tier})!`;
+
+      resultEl.innerText = resultText;
+      resultEl.style.display = 'inline-block';
+
+      resultEl.classList.remove("show-result");
+      void resultEl.offsetWidth;
+      resultEl.classList.add("show-result");
+    }
+
+    function copyResult() {
+      const text = document.getElementById("resultText").innerText;
+      if (!text || text.includes("Hasil akan muncul")) {
+        alert("Belum ada hasil untuk dicopy!");
+        return;
+      }
+      navigator.clipboard.writeText(text).then(() => {
+        alert("Hasil telah disalin ke clipboard!");
+      });
+    }
+  </script>
+
+</body>
+</html>
